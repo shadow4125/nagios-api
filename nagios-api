@@ -178,11 +178,21 @@ def http_service(req, objid, reqobj):
     ret = {}
     for service in NAGIOS.services[objid]:
         ret[service] = {}
+        ret[service]['comment'] = {}
+        ret[service]['downtime'] = {}
         service_keys = [ x for x in dir(NAGIOS.services[objid][service]) if not x.startswith('__') ]
         for service_key in service_keys:
             value = getattr(NAGIOS.services[objid][service], service_key)
             if type(value) == types.StringType:
                 ret[service][service_key] = value
+            # return comment and downtime data too, if either exists
+            elif type(value) == dict:
+                for k, v in value.iteritems():
+                    if isinstance(v, Comment):
+                        ret['comment'].append(v.for_json())
+                    elif isinstance(v, Downtime ):
+                        ret['downtime'].append(v.for_json())
+
     return json_response(req, ret)
 
 
